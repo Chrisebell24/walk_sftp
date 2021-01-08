@@ -16,7 +16,7 @@ from logging import log
 warnings.filterwarnings('ignore')
 
 
-from src.util_walk_sftp import _FastTransport
+from util_walk_sftp import _FastTransport
 
 class WalkSFTP:
     
