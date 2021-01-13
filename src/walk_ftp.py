@@ -350,7 +350,18 @@ class WalkFTP:
             self.log_data = {}
             
         elif os.path.exists(self.log):
-            self.log_data = pickle.load(open(self.log, mode='rb'))
+            while True:
+                
+                self.log_data = pickle.load(open(self.log, mode='rb'))
+                
+                if self.log_data.get('_ready', True):
+                    
+                    # this section prevents other FTPs from downloading while this one is running so your log is not double written
+                    self.log_data['_ready'] = False
+                    self.write_log()
+                    break
+                else:
+                    sleep(60)
             
         else:
             self.log_data = {}
