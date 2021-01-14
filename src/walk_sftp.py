@@ -338,11 +338,12 @@ class WalkSFTP:
                 
                 
     
-    def write_log(self):
+    def write_log(self, ready=False):
         fp = self.log
         if not os.path.exists(os.path.dirname(fp)):
             os.makedirs(os.path.dirname(fp))
-            
+        
+        if ready: self.log_data['_ready'] = True
         pickle.dump(self.log_data, open(self.log, mode='wb'))
     
     def add_log(self, fp, key, value):
@@ -474,7 +475,7 @@ class WalkSFTP:
         self.end_date = pd.to_datetime(end_date)
         self.create_pysftp_host_key()
         self.run()
-        if log != None: self.write_log()
+        if log != None: self.write_log(ready=True)
         
     def run(self):
         self.main()

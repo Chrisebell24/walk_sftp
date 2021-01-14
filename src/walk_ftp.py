@@ -337,6 +337,7 @@ class WalkFTP:
         if not os.path.exists(os.path.dirname(fp)):
             os.makedirs(os.path.dirname(fp))
             
+        if ready: self.log_data['_ready'] = True
         pickle.dump(self.log_data, open(self.log, mode='wb'))
     
     def add_log(self, fp, key, value):
@@ -473,7 +474,7 @@ class WalkFTP:
         self.start_date = pd.to_datetime(start_date)
         self.end_date = pd.to_datetime(end_date)
         self.run()
-        if log != None: self.write_log()
+        if log != None: self.write_log(ready=True)
         
     def run(self):
         self.main()
