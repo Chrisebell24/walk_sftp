@@ -356,14 +356,16 @@ class WalkFTP:
                 
                 self.log_data = pickle.load(open(self.log, mode='rb'))
                 
-                if self.log_data.get('_ready', True):
+                if self._force or self.log_data.get('_ready', True):
                     
                     # this section prevents other FTPs from downloading while this one is running so your log is not double written
                     self.log_data['_ready'] = False
                     self.write_log()
                     break
                 else:
-                    if first: self.class_print('sleeping ftp in process of running')
+                    if first: 
+                        first = False
+                        self.class_print('sleeping ftp in process of running')
                     sleep(60)
                     
             
@@ -372,6 +374,7 @@ class WalkFTP:
             self.log_data = {}
     
         self.class_print('finished reading log')
+        
     
     
     def __init__(
@@ -431,10 +434,13 @@ class WalkFTP:
             Whether to print out messages (slower when True)
         break_count : int
             stop running ftp download after n number of files downloaded
+        force : bool
+            force to overwrite log that is in progress
         '''
         self.args=args
         self._glob_count=0
         print_out = args.get('print_out', False)
+        self._force = args.get('force', False)
         
         if isinstance(blocks, str):
             blocks = [blocks]

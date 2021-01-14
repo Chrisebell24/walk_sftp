@@ -17,7 +17,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     name='walk_sftp',
-    version='0.0.7',
+    version='0.0.8',
     description='Download SFTP files using a glob to get all files & also keep a log to keep track of processing',
     long_description=long_description,
     long_description_content_type="text/markdown",
