@@ -345,11 +345,13 @@ class WalkFTP:
         
         self.log_data[fp][key] = value
     
+    
     def read_log(self):
         if self.log is None:
             self.log_data = {}
             
         elif os.path.exists(self.log):
+            first = True
             while True:
                 
                 self.log_data = pickle.load(open(self.log, mode='rb'))
@@ -361,10 +363,15 @@ class WalkFTP:
                     self.write_log()
                     break
                 else:
+                    if first: self.class_print('sleeping ftp in process of running')
                     sleep(60)
+                    
+            
             
         else:
             self.log_data = {}
+    
+        self.class_print('finished reading log')
     
     
     def __init__(

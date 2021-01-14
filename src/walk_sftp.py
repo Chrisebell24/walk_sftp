@@ -356,6 +356,7 @@ class WalkSFTP:
             self.log_data = {}
             
         elif os.path.exists(self.log):
+            first = True
             while True:
                 
                 self.log_data = pickle.load(open(self.log, mode='rb'))
@@ -367,12 +368,16 @@ class WalkSFTP:
                     self.write_log()
                     break
                 else:
+                    if first: self.class_print('sleeping ftp in process of running')
                     sleep(60)
+                    
+            
             
         else:
             self.log_data = {}
     
-    
+        self.class_print('finished reading log')
+        
     def __init__(
         self, 
         base_url, 
