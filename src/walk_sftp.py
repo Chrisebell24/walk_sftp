@@ -24,9 +24,14 @@ class WalkSFTP:
         try:
             return self._sftp.listdir(x)
         except:
-            sleep(20)
+            sleep(5)
+            
+            print(f'problem running path: {x}')
             self.connect_sftp()
-            return self._sftp.listdir(x)
+            try:
+                return self._sftp.listdir(x)
+            except:
+                return []
         
     def check_in_log(self, f, stat_mtime):
         '''
