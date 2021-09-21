@@ -478,13 +478,11 @@ class WalkSFTP:
         sleep_count : int
             number of seconds to wait until process and store threads 
             time out. Default None
-        timeout : int - default=10
-            timeout on connection
         '''
         
         self.args=args
         self.max_sleep_count = args.get('max_sleep_count', np.inf)
-        self._timeout = args.get('timeout', 10)
+        
         self._glob_count=0
         print_out = args.get('print_out', False)
         self._force = args.get('force', False)
