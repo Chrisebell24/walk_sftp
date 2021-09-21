@@ -216,9 +216,9 @@ class WalkSFTP:
                     if self._failed_key: 
                         transport = paramiko.SSHClient()
                         transport.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                        transport.connect(self._base_url, username = self._username, password = self._password, timeout=self._timeout)
+                        transport.connect(self._base_url, username = self._username, password = self._password)
                     else:    
-                        transport.connect(username = self._username, password = self._password, timeout=self._timeout)
+                        transport.connect(username = self._username, password = self._password)
                         
                     sftp = paramiko.SFTPClient.from_transport(transport)
 
@@ -239,7 +239,7 @@ class WalkSFTP:
                         raise ValueError('TOO MANY RETRIES TO CONNECT TO SFTP')
         else:
             transport = _FastTransport((self._base_url, self._port))
-            transport.connect(username = self._username, password = self._password, timeout=self._timeout)
+            transport.connect(username = self._username, password = self._password)
             self._sftp = paramiko.SFTPClient.from_transport(transport)
 
             self._s = pysftp.Connection(
