@@ -239,7 +239,7 @@ class WalkSFTP:
                         raise ValueError('TOO MANY RETRIES TO CONNECT TO SFTP')
         else:
             transport = _FastTransport((self._base_url, self._port))
-            transport.connect(username = self._username, password = self._password, self._timeout)
+            transport.connect(username = self._username, password = self._password, timeout=self._timeout)
             self._sftp = paramiko.SFTPClient.from_transport(transport)
 
             self._s = pysftp.Connection(
