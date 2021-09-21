@@ -123,13 +123,13 @@ class WalkSFTP:
     def test_file(self, f):
         for i in range(0, 2):
             try:
-                
+            
+                if self.check_ch_dir(f):
+                    return False, None
+                    
                 stat = self._sftp.stat(f)
                 stat_mtime = pd.to_datetime(stat.st_mtime*10e8)
                 stat_bool = not stat.st_size is None
-                
-                if self.check_ch_dir(f):
-                    return False, None
                 
                 return stat_bool, stat_mtime
             except:
