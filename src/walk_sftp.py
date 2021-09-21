@@ -153,6 +153,7 @@ class WalkSFTP:
     def store_all_sftp(self):
         break_count = self.args.get('break_count',np.inf)
         count=0
+        sleep_count=0
         while True:
             
             fp = self.q.get()
@@ -164,11 +165,18 @@ class WalkSFTP:
                 
             elif fp is None:
                 sleep(1)
+                sleep_count+=1
             
             elif isinstance(fp, str):
                 count+=1
                 self.class_print('storing: {}'.format(fp))
                 self.store_sftp(fp)
+                sleep_count = 0
+                
+            elif sleep_count > self.max_sleep_count:
+                self.class_print('publishing process break')
+                self.process_q.put(('break', 'break'))
+                break
                 
                 
             self.class_print('.........')
@@ -225,7 +233,7 @@ class WalkSFTP:
                 
                 except Exception as e:
                     
-                    sleep(20)
+                    sleep(10)
                     if count>10: 
                         self.exit_q()
                         raise ValueError('TOO MANY RETRIES TO CONNECT TO SFTP')
@@ -335,7 +343,7 @@ class WalkSFTP:
     def process_all_ftp(self):
         break_count = self.args.get('break_count',np.inf)
         count=0
-        
+        sleep_count = 0
         while True:
             
             
@@ -345,15 +353,21 @@ class WalkSFTP:
             if fname is None:
                 self.class_print('SLEEPING')
                 sleep(1)
-                
+                sleep_count += 1
                 
             elif isinstance(fname[0], str) and fname[0] != 'break':
                 count+=1
                 successful_process = self.processing_function(fname[0])
                 self.add_log(fname[1], 'process', successful_process)
                 self.class_print(f'process count is {count}')
+                sleep_count = 0
                 
             elif (isinstance(fname[0], str) and fname[0] == 'break') or (count>break_count):
+                self.class_print('JOINING THREADS')
+                self.join_threads = True
+                return None
+                
+            elif sleep_count > self.max_sleep_count:
                 self.class_print('JOINING THREADS')
                 self.join_threads = True
                 return None
@@ -394,7 +408,7 @@ class WalkSFTP:
                     if first: 
                         first = False
                         self.class_print('sleeping ftp in process of running')
-                    sleep(60)
+                    sleep(20)
                     
             
             
@@ -461,8 +475,12 @@ class WalkSFTP:
             stop running sftp download after n number of files downloaded
         force : bool
             force to overwrite log that is in progress
+        sleep_count : int
+            number of seconds to wait until process and store threads 
+            time out. Default None
         '''
         self.args=args
+        self.max_sleep_count = args.get('max_sleep_count', np.inf)
         self._glob_count=0
         print_out = args.get('print_out', False)
         self._force = args.get('force', False)
