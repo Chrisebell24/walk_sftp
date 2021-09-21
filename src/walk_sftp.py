@@ -140,12 +140,13 @@ class WalkSFTP:
         
     def check_ch_dir(self, f):
     
-        ret = False
+        
         try:
             self._sftp.chdir(f)
             self._sftp.chdir('..')
-        except:
             ret = True
+        except:
+            ret = False
             
         return ret
     
