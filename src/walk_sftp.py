@@ -122,11 +122,27 @@ class WalkSFTP:
                 stat = self._sftp.stat(f)
                 stat_mtime = pd.to_datetime(stat.st_mtime*10e8)
                 stat_bool = not stat.st_size is None
+                
+                if self.check_ch_dir(self, f):
+                    return False None
+                
                 return stat_bool, stat_mtime
             except:
                 self.connect_sftp()
         
         return False, None
+        
+        
+    def check_ch_dir(self, f):
+    
+        ret = False
+        try:
+            self._sftp.chdir(f)
+            self._sftp.chdir('..')
+        except:
+            ret = True
+            
+        return ret
     
     def store_all_sftp(self):
         break_count = self.args.get('break_count',np.inf)
