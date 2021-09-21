@@ -24,7 +24,7 @@ class WalkSFTP:
         try:
             return self._sftp.listdir(x)
         except:
-            sleep(60)
+            sleep(20)
             self.connect_sftp()
             return self._sftp.listdir(x)
         
@@ -123,10 +123,10 @@ class WalkSFTP:
                 stat_mtime = pd.to_datetime(stat.st_mtime*10e8)
                 stat_bool = not stat.st_size is None
                 return stat_bool, stat_mtime
-            except:
+            except IOError, e:
                 self.connect_sftp()
         
-        return False
+        return False, None
     
     def store_all_sftp(self):
         break_count = self.args.get('break_count',np.inf)
@@ -203,7 +203,7 @@ class WalkSFTP:
                 
                 except Exception as e:
                     
-                    sleep(60)
+                    sleep(20)
                     if count>10: 
                         self.exit_q()
                         raise ValueError('TOO MANY RETRIES TO CONNECT TO SFTP')
