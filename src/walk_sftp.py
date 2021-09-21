@@ -123,7 +123,7 @@ class WalkSFTP:
                 stat_mtime = pd.to_datetime(stat.st_mtime*10e8)
                 stat_bool = not stat.st_size is None
                 return stat_bool, stat_mtime
-            except IOError, e:
+            except:
                 self.connect_sftp()
         
         return False, None
