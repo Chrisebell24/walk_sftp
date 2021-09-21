@@ -128,7 +128,7 @@ class WalkSFTP:
                 stat_mtime = pd.to_datetime(stat.st_mtime*10e8)
                 stat_bool = not stat.st_size is None
                 
-                if self.check_ch_dir(self, f):
+                if self.check_ch_dir(f):
                     return False, None
                 
                 return stat_bool, stat_mtime
