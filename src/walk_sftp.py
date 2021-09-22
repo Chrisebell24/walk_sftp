@@ -169,6 +169,9 @@ class WalkSFTP:
             if isinstance(fp, str) and fp == 'break' or (count>break_count):
                 self.class_print('publishing process break')
                 self.process_q.put(('break', 'break'))
+                if not callable(self.processing_function):
+                    self.join_threads = True
+
                 break
 
             elif fp is None:
@@ -184,6 +187,10 @@ class WalkSFTP:
             elif sleep_count > self.max_sleep_count:
                 self.class_print('publishing process break')
                 self.process_q.put(('break', 'break'))
+
+                if not callable(self.processing_function):
+                    self.join_threads = True
+
                 break
 
             else:
@@ -361,7 +368,7 @@ class WalkSFTP:
 
 
             count+=1
-            if count>1000:
+            if count>1000000000:
                 self.class_print('still looping main')
                 count = 0
 
@@ -402,7 +409,7 @@ class WalkSFTP:
 
             else:
                 count+=1
-                if count > 1000:
+                if count > 1000000000:
                     self.class_print('still looping process_all_ftp')
                     count = 0
 
