@@ -11,6 +11,7 @@ import multiprocessing as mp
 from threading import Thread
 import pandas as pd
 import tempfile
+from time import sleep
 from socket import error as socket_error
 from logging import log
 warnings.filterwarnings('ignore')
@@ -21,17 +22,21 @@ from util_walk_sftp import _FastTransport
 class WalkSFTP:
     
     def list_path(self, x):
+        lp = []
         try:
-            return self._sftp.listdir(x)
+            lp = self._sftp.listdir(x)
         except:
             sleep(5)
             
             print(f'problem running path: {x}')
             self.connect_sftp()
             try:
-                return self._sftp.listdir(x)
+                lp = self._sftp.listdir(x)
+                sleep(self._sleep_time)
             except:
-                return []
+                lp = []
+                
+        return lp
         
     def check_in_log(self, f, stat_mtime):
         '''
@@ -128,6 +133,7 @@ class WalkSFTP:
                     return False, None
                     
                 stat = self._sftp.stat(f)
+                sleep(self._sleep_time)
                 stat_mtime = pd.to_datetime(stat.st_mtime*10e8)
                 stat_bool = not stat.st_size is None
                 
@@ -143,7 +149,9 @@ class WalkSFTP:
         
         try:
             self._sftp.chdir(f)
+            sleep(self._sleep_time)
             self._sftp.chdir('..')
+            sleep(self._sleep_time)
             ret = True
         except:
             ret = False
@@ -217,8 +225,10 @@ class WalkSFTP:
                         transport = paramiko.SSHClient()
                         transport.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                         transport.connect(self._base_url, username = self._username, password = self._password)
+                        sleep(self._sleep_time)
                     else:    
                         transport.connect(username = self._username, password = self._password)
+                        sleep(self._sleep_time)
                         
                     sftp = paramiko.SFTPClient.from_transport(transport)
 
@@ -241,7 +251,8 @@ class WalkSFTP:
             transport = _FastTransport((self._base_url, self._port))
             transport.connect(username = self._username, password = self._password)
             self._sftp = paramiko.SFTPClient.from_transport(transport)
-
+            sleep(self._sleep_time)
+            
             self._s = pysftp.Connection(
                 host=self._base_url, 
                 username=self._username, 
@@ -268,16 +279,19 @@ class WalkSFTP:
         for i in range(0,2):
             
             sftp, s = self.connect_sftp(True)
+            sleep(self._sleep_time)
             self.class_print(f'starting store get {remotepath}')
             
             try:
                 
                 stat = sftp.stat(remotepath)
+                sleep(self._sleep_time)
                 stat_mtime = str(pd.to_datetime(stat.st_mtime*10e8))
                 
                 #if self.validate(remotepath, stat_mtime):
                 
-                s.get(remotepath, file)                   
+                s.get(remotepath, file)    
+                sleep(self._sleep_time)                
                 self.class_print(f'finished _s get {remotepath}')
                 successful_get=True
                 self.add_log(remotepath,'get',successful_get)
@@ -321,6 +335,7 @@ class WalkSFTP:
         store_thread.start()
         
         if callable(self.processing_function): 
+            self.print_out('STARTED PROCESSING FUNCTION')
             process_thread = Thread(target=self.process_all_ftp, name='process')
             process_thread.start()
         
@@ -429,6 +444,7 @@ class WalkSFTP:
         blocks=[],
         start_date = pd.to_datetime('1970-01-01'),
         end_date = pd.datetime.today()+dt.timedelta(1),
+        sleep_time=0.01,
         **args,
     ):
         '''
@@ -482,6 +498,7 @@ class WalkSFTP:
         
         self.args=args
         self.max_sleep_count = args.get('max_sleep_count', np.inf)
+        self._sleep_time = sleep_time
         
         self._glob_count=0
         print_out = args.get('print_out', False)
