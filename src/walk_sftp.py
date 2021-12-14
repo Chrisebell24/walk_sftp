@@ -86,44 +86,54 @@ class WalkSFTP:
 
 
     def glob_sftp(self, store_paths = ''):
+        try:
+            if self._glob_count > self.args.get('break_count', np.inf):
+                return None
 
-        if self._glob_count > self.args.get('break_count', np.inf):
-            return None
+            for f in self.list_path(store_paths):
 
-        for f in self.list_path(store_paths):
+                new_fp_or_file = os.path.join(store_paths, f)
+                stat_bool, stat_mtime = self.test_file(new_fp_or_file)
+                stat_mtime = str(stat_mtime)
+                if stat_bool:
 
-            new_fp_or_file = os.path.join(store_paths, f)
-            stat_bool, stat_mtime = self.test_file(new_fp_or_file)
-            stat_mtime = str(stat_mtime)
-            if stat_bool:
-
-                date_filter = (pd.to_datetime(stat_mtime) >= pd.to_datetime(self.start_date)) and (pd.to_datetime(stat_mtime) <= pd.to_datetime(self.end_date) )
-
-
-                if date_filter and self.check_in_log(new_fp_or_file, stat_mtime):
-                    self.class_print('{} {} {}'.format(stat_mtime, new_fp_or_file, date_filter))
-                    self._glob_count+=1
-                    self.q.put(new_fp_or_file)
-
-                if self._glob_count > self.args.get('break_count', np.inf):
-                    self.class_print('publishing glob break')
-                    self.q.put('break')
-                    return None
+                    date_filter = (pd.to_datetime(stat_mtime) >= pd.to_datetime(self.start_date)) and (pd.to_datetime(stat_mtime) <= pd.to_datetime(self.end_date) )
 
 
-            else:
-                block = False
-                for b in self.blocks:
-                    if b in new_fp_or_file:
-                        block=True
-                        break
+                    if date_filter and self.check_in_log(new_fp_or_file, stat_mtime):
+                        self.class_print('{} {} {}'.format(stat_mtime, new_fp_or_file, date_filter))
+                        self._glob_count+=1
+                        self.q.put(new_fp_or_file)
 
-                if not block:
-                    self.glob_sftp(new_fp_or_file)
+                    if self._glob_count > self.args.get('break_count', np.inf):
+                        self.class_print('publishing glob break')
+                        self.q.put('break')
+                        return None
 
-        if store_paths == self.orig_store_paths:
-            self.class_print('publishing glob break')
-            self.q.put('break')
+
+                else:
+                    block = False
+                    for b in self.blocks:
+                        if b in new_fp_or_file:
+                            block=True
+                            break
+
+                    if self.must_have != []:
+                        for i in self.must_have:
+                            if i in new_fp_or_file:
+                                block = False
+                                break
+                            else:
+                                block=True
+
+                    if not block:
+                        self.glob_sftp(new_fp_or_file)
+
+            if store_paths == self.orig_store_paths:
+                self.class_print('publishing glob break')
+                self.q.put('break')
+        except:
+            sleep(self._sleep_time)
 
     def test_file(self, f):
         for i in range(0, 2):
@@ -522,10 +532,16 @@ class WalkSFTP:
         sleep_count : int
             number of seconds to wait until process and store threads
             time out. Default None
+        must_have : str/list
+            must include text in FTP download
         '''
 
         self.args=args
         self.max_sleep_count = args.get('max_sleep_count', np.inf)
+        self.must_have = args.get('must_have', [])
+        if not isinstance(self.must_have, list):
+            self.must_have = self.must_have.split(',')
+
         self._sleep_time = sleep_time
 
         self._glob_count=0
