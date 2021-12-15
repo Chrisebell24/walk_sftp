@@ -132,8 +132,11 @@ class WalkSFTP:
             if store_paths == self.orig_store_paths:
                 self.class_print('publishing glob break')
                 self.q.put('break')
-        except:
-            sleep(self._sleep_time)
+
+        except Exception as e:
+            self.class_print('glob sftp error')
+            self.class_print(e)
+            sleep(10)
 
     def test_file(self, f):
         for i in range(0, 2):
@@ -227,8 +230,8 @@ class WalkSFTP:
             try:
                 self.get(fp, store_file)
             except Exception as e:
-                print('ERROR ON: {} {}'.format(fp, store_file))
-                print(e)
+                self.class_print('ERROR ON: {} {}'.format(fp, store_file))
+                self.class_print(e)
 
     def exit_q(self):
         self.process_q.put(('break', 'break'))
@@ -284,7 +287,7 @@ class WalkSFTP:
             )
             return None
 
-        print(f'ERROR: {e}')
+        self.class_print(f'ERROR: {e}')
 
     def cleanup(self):
         self._sftp.close()
@@ -358,7 +361,7 @@ class WalkSFTP:
         store_thread.start()
 
         if callable(self.processing_function):
-            self.print_out('STARTED PROCESSING FUNCTION')
+            self.class_print('STARTED PROCESSING FUNCTION')
             process_thread = Thread(target=self.process_all_ftp, name='process')
             process_thread.start()
 
@@ -391,37 +394,40 @@ class WalkSFTP:
         sleep_count = 0
         while True:
 
+            try:
+                fname = self.process_q.get()
+                self.class_print('process all ftp finished get {}'.format(fname))
 
-            fname = self.process_q.get()
-            self.class_print('process all ftp finished get {}'.format(fname))
+                if fname is None:
+                    self.class_print('process_all_ftp SLEEPING')
+                    sleep(1)
+                    sleep_count += 1
 
-            if fname is None:
-                self.class_print('process_all_ftp SLEEPING')
-                sleep(1)
-                sleep_count += 1
+                elif isinstance(fname[0], str) and fname[0] != 'break':
+                    count+=1
+                    successful_process = self.processing_function(fname[0])
+                    self.add_log(fname[1], 'process', successful_process)
+                    self.class_print(f'process count is {count}')
+                    sleep_count = 0
 
-            elif isinstance(fname[0], str) and fname[0] != 'break':
-                count+=1
-                successful_process = self.processing_function(fname[0])
-                self.add_log(fname[1], 'process', successful_process)
-                self.class_print(f'process count is {count}')
-                sleep_count = 0
+                elif (isinstance(fname[0], str) and fname[0] == 'break') or (count>break_count):
+                    self.class_print('JOINING THREADS')
+                    self.join_threads = True
+                    return None
 
-            elif (isinstance(fname[0], str) and fname[0] == 'break') or (count>break_count):
-                self.class_print('JOINING THREADS')
-                self.join_threads = True
-                return None
+                elif sleep_count > self.max_sleep_count:
+                    self.class_print('JOINING THREADS')
+                    self.join_threads = True
+                    return None
 
-            elif sleep_count > self.max_sleep_count:
-                self.class_print('JOINING THREADS')
-                self.join_threads = True
-                return None
+                else:
+                    count+=1
+                    if count > 1000000000:
+                        self.class_print('still looping process_all_ftp')
+                        count = 0
+            except Exception as e:
+                self.class_print(f'ERROR: {e}')
 
-            else:
-                count+=1
-                if count > 1000000000:
-                    self.class_print('still looping process_all_ftp')
-                    count = 0
 
 
 
@@ -533,7 +539,8 @@ class WalkSFTP:
             number of seconds to wait until process and store threads
             time out. Default None
         must_have : str/list
-            must include text in FTP download
+            must have text to download ftp
+
         '''
 
         self.args=args
