@@ -454,8 +454,12 @@ class WalkSFTP:
         elif os.path.exists(self.log):
             first = True
             while True:
-
-                self.log_data = pickle.load(open(self.log, mode='rb'))
+                for i in range(0,10):
+                    try:
+                        self.log_data = pickle.load(open(self.log, mode='rb'))
+                        break
+                    except:
+                        sleep(2)
 
                 if self._force or self.log_data.get('_ready', True):
 
