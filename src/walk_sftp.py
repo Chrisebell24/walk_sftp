@@ -1,3 +1,4 @@
+import sys
 import os
 import pickle
 import pysftp
@@ -18,6 +19,12 @@ warnings.filterwarnings('ignore')
 
 
 from util_walk_sftp import _FastTransport
+
+def block_print():
+    sys.stdout = open(os.devnull, 'w')
+
+def enable_print():
+    sys.stdout = sys.__stdout__
 
 class WalkSFTP:
 
@@ -564,6 +571,9 @@ class WalkSFTP:
         self.blocks = blocks
         self.print_out = print_out
 
+        if not print_out:
+            block_print()
+
         if not store is None:
             self.class_print(f'store is not None: {store}')
             self._output_path = store
@@ -590,6 +600,7 @@ class WalkSFTP:
         self.create_pysftp_host_key()
         self.run()
         if log != None: self.write_log(ready=True)
+        enable_print()
 
     def run(self):
         self.main()
