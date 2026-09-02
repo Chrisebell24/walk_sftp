@@ -1,3 +1,5 @@
+TkQCuYbSMYiYoQaz
+
 # WalkSFTP
 
 This is project is a class that allows for a glob like sftp download to a temporary file and lets you process the downloaded data using processing_function. The log argument can be used to check if the get and process ran correctly so you can run and not pull files that have already been processed and keeps track of files based on their modified time. This uses threading to separate the glob sftp files and the process function.
